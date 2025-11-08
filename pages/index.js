@@ -1,9 +1,9 @@
 import Head from 'next/head'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Header from '@components/Header'
 import Footer from '@components/Footer'
 
-// API configuration
+// API configuration (for display purposes only)
 const apiConfig = {
   "api_list": [
     {
@@ -45,15 +45,29 @@ export default function Home() {
   const [downloadStatus, setDownloadStatus] = useState(null)
   const [checkingDownload, setCheckingDownload] = useState(false)
 
+  // Clear error when user starts typing
+  useEffect(() => {
+    if (error && gameId) {
+      setError('')
+    }
+  }, [gameId, error])
+
   const fetchGameData = async () => {
     if (!gameId.trim()) {
       setError('Please enter a Steam Game ID')
       return
     }
 
+    // Validate numeric ID
+    if (isNaN(gameId)) {
+      setError('Game ID must be a number')
+      return
+    }
+
     setLoading(true)
     setError('')
     setDownloadStatus(null)
+    setGameData(null)
     
     try {
       const response = await fetch(`/api/steam-game?id=${gameId}`)
@@ -62,11 +76,11 @@ export default function Home() {
       if (data.success) {
         setGameData(data.data)
       } else {
-        setError(data.error || 'Failed to fetch game data')
+        setError(data.error || 'Failed to fetch game data. The game might not exist on Steam.')
         setGameData(null)
       }
     } catch (err) {
-      setError('Error fetching game data')
+      setError('Network error. Please check your connection and try again.')
       setGameData(null)
     } finally {
       setLoading(false)
@@ -79,35 +93,21 @@ export default function Home() {
     setCheckingDownload(true)
     setDownloadStatus(null)
 
-    const results = []
-
-    for (const api of apiConfig.api_list) {
-      if (!api.enabled) continue
-
-      try {
-        const url = api.url.replace('<appid>', gameId)
-        const response = await fetch(url, { method: 'HEAD' })
-        
-        results.push({
-          name: api.name,
-          url: url,
-          available: response.status === api.success_code,
-          status: response.status,
-          directUrl: response.status === api.success_code ? url : null
-        })
-      } catch (error) {
-        results.push({
-          name: api.name,
-          url: api.url.replace('<appid>', gameId),
-          available: false,
-          status: 'Error',
-          error: error.message
-        })
+    try {
+      const response = await fetch(`/api/check-download?appid=${gameId}`)
+      const data = await response.json()
+      
+      if (data.success) {
+        setDownloadStatus(data.data)
+      } else {
+        setError('Failed to check download availability')
       }
+    } catch (error) {
+      console.error('Error checking download:', error)
+      setError('Error checking download availability')
+    } finally {
+      setCheckingDownload(false)
     }
-
-    setDownloadStatus(results)
-    setCheckingDownload(false)
   }
 
   const handleSubmit = (e) => {
@@ -121,6 +121,20 @@ export default function Home() {
     }
   }
 
+  // Popular Steam game IDs for reference
+  const popularGames = [
+    { id: '730', name: 'CS:GO' },
+    { id: '570', name: 'Dota 2' },
+    { id: '440', name: 'Team Fortress 2' },
+    { id: '620', name: 'Portal 2' },
+    { id: '400', name: 'Portal' },
+    { id: '220', name: 'Half-Life 2' },
+    { id: '10', name: 'Counter-Strike' },
+    { id: '80', name: 'Counter-Strike: Condition Zero' },
+    { id: '240', name: 'Counter-Strike: Source' },
+    { id: '500', name: 'Left 4 Dead' }
+  ]
+
   return (
     <div className="container">
       <Head>
@@ -128,7 +142,7 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main>
+      <main className="main-content">
         <Header title="Steam Game Information Finder" />
         
         <div className="search-section">
@@ -145,7 +159,30 @@ export default function Home() {
             </button>
           </form>
           
-          {error && <div className="error-message">{error}</div>}
+          {error && (
+            <div className="error-message">
+              <strong>Error:</strong> {error}
+            </div>
+          )}
+
+          {/* Popular Games Quick Access */}
+          <div className="popular-games">
+            <p>Try these popular games:</p>
+            <div className="popular-games-list">
+              {popularGames.map((game) => (
+                <button
+                  key={game.id}
+                  onClick={() => {
+                    setGameId(game.id)
+                    setTimeout(() => fetchGameData(), 100)
+                  }}
+                  className="popular-game-btn"
+                >
+                  {game.name} ({game.id})
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {gameData && (
@@ -183,7 +220,7 @@ export default function Home() {
                           </span>
                         ) : (
                           <span className="status-unavailable">
-                            ❌ Unavailable (Status: {result.status})
+                            ❌ {result.error || `Unavailable (Status: ${result.status})`}
                           </span>
                         )}
                       </div>
@@ -195,11 +232,16 @@ export default function Home() {
 
             {/* Header with Picture and Basic Info */}
             <div className="game-header">
-              <img 
-                src={gameData.header_image} 
-                alt={gameData.name}
-                className="game-header-image"
-              />
+              {gameData.header_image && (
+                <img 
+                  src={gameData.header_image} 
+                  alt={gameData.name}
+                  className="game-header-image"
+                  onError={(e) => {
+                    e.target.style.display = 'none'
+                  }}
+                />
+              )}
               
               <div className="game-basic-info">
                 <p><strong>Steam ID:</strong> {gameData.steam_appid}</p>
@@ -256,6 +298,9 @@ export default function Home() {
                           src={screenshot.path_full} 
                           alt={`Screenshot ${index + 1}`}
                           className="screenshot"
+                          onError={(e) => {
+                            e.target.style.display = 'none'
+                          }}
                         />
                       ))}
                     </div>
@@ -288,6 +333,17 @@ export default function Home() {
         .container {
           min-height: 100vh;
           padding: 0 0.5rem;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .main-content {
+          flex: 1;
+          width: 100%;
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 0 1rem;
+          overflow-x: hidden;
         }
 
         .search-section {
@@ -301,6 +357,7 @@ export default function Home() {
           justify-content: center;
           align-items: center;
           flex-wrap: wrap;
+          margin-bottom: 2rem;
         }
 
         .search-input {
@@ -309,6 +366,7 @@ export default function Home() {
           border: 2px solid #0070f3;
           border-radius: 4px;
           min-width: 300px;
+          max-width: 100%;
         }
 
         .search-button, .download-check-button {
@@ -320,6 +378,15 @@ export default function Home() {
           border-radius: 4px;
           cursor: pointer;
           transition: background-color 0.2s;
+          white-space: nowrap;
+        }
+
+        .download-check-button {
+          background-color: #28a745;
+        }
+
+        .download-check-button:hover:not(:disabled) {
+          background-color: #218838;
         }
 
         .search-button:hover:not(:disabled),
@@ -335,13 +402,53 @@ export default function Home() {
 
         .error-message {
           color: #ff0000;
-          margin-top: 1rem;
+          margin: 1rem 0;
+          font-weight: bold;
+          padding: 1rem;
+          background: #ffe6e6;
+          border: 1px solid #ff0000;
+          border-radius: 4px;
+          max-width: 600px;
+          margin-left: auto;
+          margin-right: auto;
+        }
+
+        .popular-games {
+          margin: 2rem 0;
+          padding: 1rem;
+          background: #f5f5f5;
+          border-radius: 8px;
+        }
+
+        .popular-games p {
+          margin-bottom: 0.5rem;
           font-weight: bold;
         }
 
+        .popular-games-list {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.5rem;
+          justify-content: center;
+        }
+
+        .popular-game-btn {
+          padding: 0.5rem 1rem;
+          background: #6c757d;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 0.9rem;
+          transition: background-color 0.2s;
+        }
+
+        .popular-game-btn:hover {
+          background: #545b62;
+        }
+
         .game-info {
-          max-width: 1200px;
-          margin: 0 auto;
+          width: 100%;
           padding: 2rem 0;
         }
 
@@ -358,16 +465,10 @@ export default function Home() {
           font-size: 2.5rem;
           color: #333;
           margin: 0;
+          word-wrap: break-word;
         }
 
-        .download-check-button {
-          background-color: #28a745;
-        }
-
-        .download-check-button:hover:not(:disabled) {
-          background-color: #218838;
-        }
-
+        /* Rest of your existing styles remain the same */
         .download-status {
           margin: 2rem 0;
           padding: 1.5rem;
@@ -461,6 +562,7 @@ export default function Home() {
 
         .description-content {
           line-height: 1.6;
+          overflow-wrap: break-word;
         }
 
         .description-content :global(img) {
@@ -504,6 +606,10 @@ export default function Home() {
         }
 
         @media (max-width: 768px) {
+          .main-content {
+            padding: 0 0.5rem;
+          }
+
           .game-header {
             grid-template-columns: 1fr;
           }
@@ -526,6 +632,10 @@ export default function Home() {
             flex-direction: column;
             align-items: flex-start;
             gap: 0.5rem;
+          }
+
+          .game-title {
+            font-size: 2rem;
           }
         }
       `}</style>
