@@ -52,6 +52,13 @@ export default function Home() {
     }
   }, [gameId, error])
 
+  // Scroll to top when game data loads
+  useEffect(() => {
+    if (gameData) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [gameData]);
+
   const fetchGameData = async () => {
     if (!gameId.trim()) {
       setError('Please enter a Steam Game ID')
@@ -142,9 +149,9 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
+      <Header title="Steam Game Information Finder" />
+      
       <main className="main-content">
-        <Header title="Steam Game Information Finder" />
-        
         <div className="search-section">
           <form onSubmit={handleSubmit} className="search-form">
             <input
@@ -330,20 +337,20 @@ export default function Home() {
       <Footer />
 
       <style jsx>{`
+        /* Reset container to allow full page scrolling */
         .container {
           min-height: 100vh;
-          padding: 0 0.5rem;
           display: flex;
           flex-direction: column;
         }
 
+        /* Make main content scrollable and take remaining space */
         .main-content {
           flex: 1;
           width: 100%;
           max-width: 1200px;
           margin: 0 auto;
           padding: 0 1rem;
-          overflow-x: hidden;
         }
 
         .search-section {
@@ -637,6 +644,23 @@ export default function Home() {
           .game-title {
             font-size: 2rem;
           }
+        }
+
+        /* Global styles to ensure full page scroll */
+        :global(html) {
+          height: 100%;
+        }
+
+        :global(body) {
+          height: 100%;
+          margin: 0;
+          padding: 0;
+        }
+
+        :global(#__next) {
+          height: 100%;
+          display: flex;
+          flex-direction: column;
         }
       `}</style>
     </div>
