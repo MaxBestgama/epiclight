@@ -237,38 +237,51 @@ export default function Home() {
               </div>
             )}
 
-            {/* Header with Picture and Basic Info */}
-            <div className="game-header">
-              {gameData.header_image && (
+            {/* Steam Header Picture */}
+            {gameData.header_image && (
+              <div className="steam-header-container">
                 <img 
                   src={gameData.header_image} 
                   alt={gameData.name}
-                  className="game-header-image"
+                  className="steam-header-image"
                   onError={(e) => {
                     e.target.style.display = 'none'
                   }}
                 />
-              )}
-              
-              <div className="game-basic-info">
-                <p><strong>Steam ID:</strong> {gameData.steam_appid}</p>
-                <p><strong>Release Date:</strong> {gameData.release_date?.date || 'N/A'}</p>
-                <p><strong>Developers:</strong> {gameData.developers?.join(', ') || 'N/A'}</p>
-                <p><strong>Publishers:</strong> {gameData.publishers?.join(', ') || 'N/A'}</p>
-                <p><strong>Price:</strong> {gameData.price_overview?.final_formatted || 'Free'}</p>
               </div>
+            )}
+
+            {/* Game Info Section */}
+            <div className="game-basic-info">
+              <p><strong>Steam ID:</strong> {gameData.steam_appid}</p>
+              <p><strong>Release Date:</strong> {gameData.release_date?.date || 'N/A'}</p>
+              <p><strong>Developers:</strong> {gameData.developers?.join(', ') || 'N/A'}</p>
+              <p><strong>Publishers:</strong> {gameData.publishers?.join(', ') || 'N/A'}</p>
+              <p><strong>Price:</strong> {gameData.price_overview?.final_formatted || 'Free'}</p>
             </div>
 
-            {/* Description */}
-            <div className="game-description">
-              <h2>Description</h2>
-              <div 
-                dangerouslySetInnerHTML={{ __html: gameData.detailed_description }} 
-                className="description-content"
-              />
-            </div>
+            {/* Horizontal Game Pictures Roller */}
+            {gameData.media?.screenshots && gameData.media.screenshots.length > 0 && (
+              <div className="game-pictures-roller">
+                <h2>Game Pictures</h2>
+                <div className="roller-container">
+                  {gameData.media.screenshots.map((screenshot, index) => (
+                    <div key={index} className="roller-item">
+                      <img 
+                        src={screenshot.path_thumbnail || screenshot.path_full} 
+                        alt={`Game ${index + 1}`}
+                        className="roller-image"
+                        onError={(e) => {
+                          e.target.style.display = 'none'
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-            {/* Media Showcase */}
+            {/* Media Section */}
             {gameData.media && (
               <div className="media-section">
                 <h2>Media</h2>
@@ -316,6 +329,15 @@ export default function Home() {
               </div>
             )}
 
+            {/* Description */}
+            <div className="game-description">
+              <h2>Description</h2>
+              <div 
+                dangerouslySetInnerHTML={{ __html: gameData.detailed_description }} 
+                className="description-content"
+              />
+            </div>
+
             {/* DLCs */}
             {gameData.dlcs && gameData.dlcs.length > 0 && (
               <div className="dlc-section">
@@ -337,25 +359,27 @@ export default function Home() {
       <Footer />
 
       <style jsx>{`
-        /* Reset container to allow full page scrolling */
         .container {
           min-height: 100vh;
           display: flex;
           flex-direction: column;
         }
 
-        /* Make main content scrollable and take remaining space */
         .main-content {
           flex: 1;
           width: 100%;
           max-width: 1200px;
           margin: 0 auto;
-          padding: 0 1rem;
+          padding: 0 1rem 2rem;
         }
 
         .search-section {
           margin: 2rem 0;
           text-align: center;
+          background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+          padding: 3rem 2rem;
+          border-radius: 16px;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.3);
         }
 
         .search-form {
@@ -368,68 +392,103 @@ export default function Home() {
         }
 
         .search-input {
-          padding: 0.75rem;
-          font-size: 1rem;
-          border: 2px solid #0070f3;
-          border-radius: 4px;
+          padding: 1rem 1.25rem;
+          font-size: 1.1rem;
+          border: 2px solid rgba(255,255,255,0.3);
+          border-radius: 12px;
           min-width: 300px;
           max-width: 100%;
+          background: rgba(255,255,255,0.95);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+          transition: all 0.3s ease;
         }
 
-        .search-button, .download-check-button {
-          padding: 0.75rem 1.5rem;
-          font-size: 1rem;
-          background-color: #0070f3;
+        .search-input:focus {
+          outline: none;
+          border-color: #fff;
+          box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+          transform: translateY(-2px);
+        }
+
+        .search-button {
+          padding: 1rem 2rem;
+          font-size: 1.1rem;
+          font-weight: 600;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           color: white;
-          border: none;
-          border-radius: 4px;
+          border: 2px solid rgba(255,255,255,0.3);
+          border-radius: 12px;
           cursor: pointer;
-          transition: background-color 0.2s;
+          transition: all 0.3s ease;
           white-space: nowrap;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .search-button:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+          border-color: #fff;
+        }
+
+        .search-button:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          transform: none;
         }
 
         .download-check-button {
-          background-color: #28a745;
+          padding: 0.875rem 1.75rem;
+          font-size: 1rem;
+          font-weight: 600;
+          background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+          color: white;
+          border: none;
+          border-radius: 12px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          white-space: nowrap;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.15);
         }
 
         .download-check-button:hover:not(:disabled) {
-          background-color: #218838;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(0,0,0,0.25);
         }
 
-        .search-button:hover:not(:disabled),
-        .download-check-button:hover:not(:disabled) {
-          background-color: #0051a8;
-        }
-
-        .search-button:disabled,
         .download-check-button:disabled {
-          background-color: #ccc;
+          opacity: 0.6;
           cursor: not-allowed;
+          transform: none;
         }
 
         .error-message {
-          color: #ff0000;
-          margin: 1rem 0;
-          font-weight: bold;
-          padding: 1rem;
-          background: #ffe6e6;
-          border: 1px solid #ff0000;
-          border-radius: 4px;
+          color: #ff6b6b;
+          margin: 1.5rem 0;
+          font-weight: 600;
+          padding: 1.25rem;
+          background: #2d1b1b;
+          border-left: 4px solid #dc3545;
+          border-radius: 8px;
           max-width: 600px;
           margin-left: auto;
           margin-right: auto;
+          box-shadow: 0 2px 8px rgba(220,53,69,0.2);
         }
 
         .popular-games {
-          margin: 2rem 0;
-          padding: 1rem;
-          background: #f5f5f5;
-          border-radius: 8px;
+          margin: 2.5rem 0 0;
+          padding: 1.5rem;
+          background: rgba(22, 33, 62, 0.6);
+          border-radius: 12px;
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255,255,255,0.1);
         }
 
         .popular-games p {
-          margin-bottom: 0.5rem;
-          font-weight: bold;
+          margin-bottom: 1rem;
+          font-weight: 700;
+          color: white;
+          font-size: 1.1rem;
         }
 
         .popular-games-list {
@@ -440,23 +499,40 @@ export default function Home() {
         }
 
         .popular-game-btn {
-          padding: 0.5rem 1rem;
-          background: #6c757d;
+          padding: 0.625rem 1.25rem;
+          background: rgba(255,255,255,0.25);
           color: white;
-          border: none;
-          border-radius: 4px;
+          border: 1px solid rgba(255,255,255,0.3);
+          border-radius: 8px;
           cursor: pointer;
-          font-size: 0.9rem;
-          transition: background-color 0.2s;
+          font-size: 0.95rem;
+          font-weight: 500;
+          transition: all 0.3s ease;
+          backdrop-filter: blur(5px);
         }
 
         .popular-game-btn:hover {
-          background: #545b62;
+          background: rgba(255,255,255,0.35);
+          border-color: rgba(255,255,255,0.5);
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
         .game-info {
           width: 100%;
           padding: 2rem 0;
+          animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
 
         .game-title-section {
@@ -470,18 +546,29 @@ export default function Home() {
 
         .game-title {
           font-size: 2.5rem;
-          color: #333;
+          color: #eee;
           margin: 0;
           word-wrap: break-word;
+          font-weight: 700;
+          line-height: 1.2;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
         }
 
-        /* Rest of your existing styles remain the same */
         .download-status {
           margin: 2rem 0;
-          padding: 1.5rem;
-          background: #f8f9fa;
-          border-radius: 8px;
-          border: 1px solid #dee2e6;
+          padding: 2rem;
+          background: linear-gradient(135deg, #16213e 0%, #0f3460 100%);
+          border-radius: 16px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .download-status h3 {
+          color: #eee;
+          margin-top: 0;
+          font-size: 1.5rem;
         }
 
         .api-results {
@@ -500,12 +587,12 @@ export default function Home() {
         }
 
         .api-result.available {
-          background: #d4edda;
+          background: #1a3d2e;
           border-left-color: #28a745;
         }
 
         .api-result.unavailable {
-          background: #f8d7da;
+          background: #3d1a1a;
           border-left-color: #dc3545;
         }
 
@@ -530,14 +617,111 @@ export default function Home() {
         }
 
         .status-available {
-          color: #155724;
+          color: #66ff99;
           display: flex;
           align-items: center;
           gap: 0.5rem;
         }
 
         .status-unavailable {
-          color: #721c24;
+          color: #ff6b6b;
+        }
+
+        .steam-header-container {
+          margin: 2rem 0;
+          text-align: center;
+        }
+
+        .steam-header-image {
+          width: 100%;
+          max-width: 900px;
+          border-radius: 16px;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+          transition: transform 0.3s ease;
+        }
+
+        .steam-header-image:hover {
+          transform: scale(1.02);
+        }
+
+        .game-basic-info {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 1rem;
+          margin: 2rem 0;
+        }
+
+        .game-basic-info p {
+          padding: 1rem;
+          background: #16213e;
+          border-radius: 12px;
+          margin: 0;
+          border-left: 3px solid #667eea;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .game-basic-info strong {
+          color: #667eea;
+        }
+
+        .game-pictures-roller {
+          margin: 3rem 0;
+        }
+
+        .game-pictures-roller h2 {
+          color: #eee;
+          font-size: 1.75rem;
+          margin-bottom: 1.5rem;
+        }
+
+        .roller-container {
+          display: flex;
+          gap: 1rem;
+          overflow-x: auto;
+          overflow-y: hidden;
+          padding: 1rem 0;
+          scroll-behavior: smooth;
+          scrollbar-width: thin;
+          scrollbar-color: #667eea #16213e;
+        }
+
+        .roller-container::-webkit-scrollbar {
+          height: 8px;
+        }
+
+        .roller-container::-webkit-scrollbar-track {
+          background: #16213e;
+          border-radius: 10px;
+        }
+
+        .roller-container::-webkit-scrollbar-thumb {
+          background: #667eea;
+          border-radius: 10px;
+        }
+
+        .roller-container::-webkit-scrollbar-thumb:hover {
+          background: #764ba2;
+        }
+
+        .roller-item {
+          flex: 0 0 auto;
+          width: 300px;
+          height: 180px;
+        }
+
+        .roller-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          border-radius: 12px;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+          cursor: pointer;
+        }
+
+        .roller-image:hover {
+          transform: scale(1.05);
+          box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
         }
 
         .game-header {
@@ -545,31 +729,30 @@ export default function Home() {
           grid-template-columns: 1fr 1fr;
           gap: 2rem;
           margin-bottom: 2rem;
-        }
-
-        .game-header-image {
-          width: 100%;
-          border-radius: 8px;
-          box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-
-        .game-basic-info {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-          font-size: 1.1rem;
+          background: #16213e;
+          padding: 2rem;
+          border-radius: 16px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.3);
         }
 
         .game-description {
           margin: 2rem 0;
-          padding: 1.5rem;
-          background: #f5f5f5;
-          border-radius: 8px;
+          padding: 2rem;
+          background: #16213e;
+          border-radius: 16px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .game-description h2 {
+          color: #eee;
+          margin-top: 0;
+          font-size: 1.75rem;
         }
 
         .description-content {
           line-height: 1.6;
           overflow-wrap: break-word;
+          color: #ccc;
         }
 
         .description-content :global(img) {
@@ -581,6 +764,10 @@ export default function Home() {
           margin: 2rem 0;
         }
 
+        .media-section h2, .media-section h3 {
+          color: #eee;
+        }
+
         .videos-grid, .screenshots-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -590,12 +777,23 @@ export default function Home() {
 
         .game-video, .screenshot {
           width: 100%;
-          border-radius: 8px;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          border-radius: 12px;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .screenshot:hover {
+          transform: scale(1.02);
+          box-shadow: 0 8px 24px rgba(0,0,0,0.18);
         }
 
         .dlc-section {
           margin: 2rem 0;
+        }
+
+        .dlc-section h2 {
+          color: #eee;
+          font-size: 1.75rem;
         }
 
         .dlc-grid {
@@ -606,19 +804,41 @@ export default function Home() {
         }
 
         .dlc-item {
-          padding: 1rem;
-          background: #f9f9f9;
-          border-radius: 8px;
-          border: 1px solid #ddd;
+          padding: 1.5rem;
+          background: #16213e;
+          border-radius: 12px;
+          box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+          border-left: 3px solid #667eea;
+        }
+
+        .dlc-item:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+        }
+
+        .dlc-item h4 {
+          color: #eee;
+          margin-top: 0;
+        }
+
+        .dlc-item p {
+          color: #ccc;
         }
 
         @media (max-width: 768px) {
           .main-content {
-            padding: 0 0.5rem;
+            padding: 0 0.5rem 2rem;
+          }
+
+          .search-section {
+            padding: 2rem 1rem;
+            margin: 1rem 0;
           }
 
           .game-header {
             grid-template-columns: 1fr;
+            padding: 1.5rem;
           }
           
           .search-form {
@@ -628,6 +848,13 @@ export default function Home() {
           .search-input {
             min-width: auto;
             width: 100%;
+            font-size: 1rem;
+          }
+
+          .search-button {
+            width: 100%;
+            padding: 0.875rem 1.5rem;
+            font-size: 1rem;
           }
 
           .game-title-section {
@@ -642,25 +869,41 @@ export default function Home() {
           }
 
           .game-title {
-            font-size: 2rem;
+            font-size: 1.75rem;
+          }
+
+          .game-description,
+          .download-status {
+            padding: 1.5rem;
+          }
+
+          .popular-games-list {
+            gap: 0.4rem;
+          }
+
+          .popular-game-btn {
+            font-size: 0.85rem;
+            padding: 0.5rem 0.875rem;
+          }
+
+          .videos-grid, .screenshots-grid {
+            grid-template-columns: 1fr;
           }
         }
 
-        /* Global styles to ensure full page scroll */
         :global(html) {
-          height: 100%;
+          scroll-behavior: smooth;
         }
 
         :global(body) {
-          height: 100%;
           margin: 0;
           padding: 0;
         }
 
         :global(#__next) {
-          height: 100%;
           display: flex;
           flex-direction: column;
+          min-height: 100vh;
         }
       `}</style>
     </div>
