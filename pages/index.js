@@ -104,7 +104,7 @@ export default function Home() {
       <header className="header">
         <div className="header-content">
           <h1 className="header-title">
-            <span className="logo-icon"></span> MYGAMELIST
+            <span className="logo-icon"></span> Epicano 247
           </h1>
           <div className="search-form">
             <input
